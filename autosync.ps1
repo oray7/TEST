@@ -10,6 +10,6 @@ while ($true) {
         & git commit -m $msg | Out-Null
         & git push 2>&1 | Out-Null
         Write-Host "Synced to GitHub -- $msg" -ForegroundColor Green
-    }ييي
+    }
     Start-Sleep -Seconds 10
 }
