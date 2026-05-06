@@ -43,7 +43,8 @@ class App(ctk.CTk):
         self.title("EmailPro")
         self.configure(fg_color=BG)
         self.geometry("780x640")
-        self.resizable(False, False)
+        self.minsize(780, 640)
+        self.resizable(True, True)
 
         self.file_path       = None
         self.email_list_path = None
@@ -121,7 +122,6 @@ class App(ctk.CTk):
     def _try_activate(self):
         if activate(self.key_entry.get().strip()):
             self.geometry("780x640")
-            self.resizable(False, False)
             self._build_main()
         else:
             messagebox.showerror("Invalid Key", "This license key is not valid.")

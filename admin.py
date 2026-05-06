@@ -106,12 +106,17 @@ class AdminApp(ctk.CTk):
                 ctk.CTkButton(actions, text="Revoke", width=64, height=28, corner_radius=6,
                               fg_color="#3d1a1a", hover_color="#5a1a1a", text_color="#ef4444",
                               font=ctk.CTkFont(size=11),
-                              command=lambda r=row: self._revoke(r)).pack(side="left")
+                              command=lambda r=row: self._revoke(r)).pack(side="left", padx=(0, 4))
             else:
                 ctk.CTkButton(actions, text="Restore", width=64, height=28, corner_radius=6,
                               fg_color="#1a3a1a", hover_color="#1a5a1a", text_color="#22c55e",
                               font=ctk.CTkFont(size=11),
-                              command=lambda r=row: self._restore(r)).pack(side="left")
+                              command=lambda r=row: self._restore(r)).pack(side="left", padx=(0, 4))
+
+            ctk.CTkButton(actions, text="Delete", width=58, height=28, corner_radius=6,
+                          fg_color="#2a0a0a", hover_color="#4a0a0a", text_color="#ff6b6b",
+                          font=ctk.CTkFont(size=11),
+                          command=lambda r=row: self._delete(r)).pack(side="left")
 
     def _new_key(self):
         note = simpledialog.askstring("New Key", "Customer name or note (optional):", parent=self)
@@ -150,6 +155,14 @@ class AdminApp(ctk.CTk):
         keys[row]["status"] = "active"
         save_keys(keys)
         self._refresh()
+
+    def _delete(self, row):
+        keys = load_keys()
+        key = keys[row]["key"]
+        if messagebox.askyesno("Delete Key", f"Permanently delete this key?\n{key}\n\nThis cannot be undone."):
+            keys.pop(row)
+            save_keys(keys)
+            self._refresh()
 
 
 if __name__ == "__main__":
