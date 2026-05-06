@@ -70,7 +70,6 @@ class AdminApp(ctk.CTk):
 
         for i, entry in enumerate(reversed(keys), start=1):
             row = len(keys) - i
-            bg = "#161b22" if i % 2 == 0 else "#0d1117"
 
             ctk.CTkLabel(self.table_frame, text=entry["key"], anchor="w",
                          font=ctk.CTkFont(family="Courier", size=12), width=200).grid(

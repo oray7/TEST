@@ -1,3 +1,4 @@
+import smtplib
 import threading
 import time
 import os
@@ -11,14 +12,15 @@ from send_emails import get_smtp_settings, get_email_list, send_email
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
-BG       = "#0a0a12"
-CARD     = "#12121e"
-CARD2    = "#1a1a2e"
-BORDER   = "#252545"
-ACCENT   = "#5b5ef4"
-SUCCESS  = "#22c55e"
-DANGER   = "#ef4444"
-MUTED    = "#6e7691"
+BG     = "#0a0a12"
+CARD   = "#12121e"
+CARD2  = "#1a1a2e"
+BORDER = "#252545"
+ACCENT = "#5b5ef4"
+SUCCESS = "#22c55e"
+DANGER  = "#ef4444"
+MUTED   = "#6e7691"
+
 SETTINGS_FILE = "settings.json"
 
 def load_settings():
@@ -71,7 +73,6 @@ class App(ctk.CTk):
                             border_width=1, border_color=BORDER)
         card.place(relx=0.5, rely=0.5, anchor="center", relwidth=0.86)
 
-        # Icon circle
         ic = ctk.CTkFrame(card, width=64, height=64, corner_radius=32, fg_color=ACCENT)
         ic.pack(pady=(36, 0))
         ic.pack_propagate(False)
@@ -133,42 +134,38 @@ class App(ctk.CTk):
         root = ctk.CTkFrame(self, fg_color=BG, corner_radius=0)
         root.pack(fill="both", expand=True)
 
-        # ── Top bar
-        topbar = ctk.CTkFrame(root, fg_color=CARD, corner_radius=0, height=58,
-                              border_width=0)
+        # Top bar
+        topbar = ctk.CTkFrame(root, fg_color=CARD, corner_radius=0, height=58)
         topbar.pack(fill="x")
         topbar.pack_propagate(False)
-
         ctk.CTkLabel(topbar, text="✉  EmailPro",
                      font=ctk.CTkFont(size=17, weight="bold")).pack(side="left", padx=24)
-
         badge = ctk.CTkFrame(topbar, fg_color="#0f2d1a", corner_radius=20)
         badge.pack(side="right", padx=20, pady=14)
         ctk.CTkLabel(badge, text="● Licensed",
                      text_color=SUCCESS, font=ctk.CTkFont(size=12)).pack(padx=14, pady=4)
 
-        # ── Main content
         body = ctk.CTkFrame(root, fg_color="transparent")
         body.pack(fill="both", expand=True, padx=20, pady=16)
 
-        # 3-column top cards
+        # 3-column cards
         cols = ctk.CTkFrame(body, fg_color="transparent")
         cols.pack(fill="x")
         cols.columnconfigure((0, 1, 2), weight=1)
 
-        # ── Card 1: Account
+        # Card 1: Account
         c1 = self._card(cols, "1  Account", col=0)
         self._field_label(c1, "Email address")
         self.email_entry = ctk.CTkEntry(c1, height=38, corner_radius=10,
-                                         placeholder_text="you@example.com",
-                                         border_color=BORDER)
+                                        placeholder_text="you@example.com",
+                                        border_color=BORDER)
         self.email_entry.insert(0, self.settings.get("email", ""))
         self.email_entry.pack(fill="x", padx=14, pady=(0, 10))
 
         self._field_label(c1, "Password")
         self.pass_entry = ctk.CTkEntry(c1, height=38, corner_radius=10,
-                                        show="*", placeholder_text="••••••••",
-                                        border_color=BORDER)
+                                       show="*", placeholder_text="••••••••",
+                                       border_color=BORDER)
         self.pass_entry.pack(fill="x", padx=14, pady=(0, 10))
 
         test_row = ctk.CTkFrame(c1, fg_color="transparent")
@@ -176,15 +173,14 @@ class App(ctk.CTk):
         self.login_btn = ctk.CTkButton(test_row, text="Test Login", height=34,
                                        corner_radius=8, fg_color=CARD2,
                                        hover_color=BORDER, border_width=1,
-                                       border_color=BORDER,
-                                       font=ctk.CTkFont(size=12),
+                                       border_color=BORDER, font=ctk.CTkFont(size=12),
                                        command=self._test_login)
         self.login_btn.pack(side="left", fill="x", expand=True, padx=(0, 6))
         self.login_status = ctk.CTkLabel(test_row, text="—", width=28,
-                                          font=ctk.CTkFont(size=18), text_color=MUTED)
+                                         font=ctk.CTkFont(size=18), text_color=MUTED)
         self.login_status.pack(side="left")
 
-        # ── Card 2: Files
+        # Card 2: Files
         c2 = self._card(cols, "2  Files", col=1)
 
         self._field_label(c2, "Email list (.txt)")
@@ -193,11 +189,10 @@ class App(ctk.CTk):
         self.list_btn = ctk.CTkButton(list_row, text="Browse file", height=38,
                                       corner_radius=10, fg_color=CARD2,
                                       hover_color=BORDER, border_width=1,
-                                      border_color=BORDER,
-                                      command=self._load_list)
+                                      border_color=BORDER, command=self._load_list)
         self.list_btn.pack(fill="x")
         self.list_info = ctk.CTkLabel(list_row, text="No file selected",
-                                       text_color=MUTED, font=ctk.CTkFont(size=11))
+                                      text_color=MUTED, font=ctk.CTkFont(size=11))
         self.list_info.pack(anchor="w", pady=(4, 0))
 
         self._field_label(c2, "Attach CV (optional)")
@@ -206,60 +201,55 @@ class App(ctk.CTk):
         self.cv_btn = ctk.CTkButton(cv_row, text="Browse file", height=38,
                                     corner_radius=10, fg_color=CARD2,
                                     hover_color=BORDER, border_width=1,
-                                    border_color=BORDER,
-                                    command=self._load_cv)
+                                    border_color=BORDER, command=self._load_cv)
         self.cv_btn.pack(fill="x")
         self.cv_info = ctk.CTkLabel(cv_row, text="No file attached",
-                                     text_color=MUTED, font=ctk.CTkFont(size=11))
+                                    text_color=MUTED, font=ctk.CTkFont(size=11))
         self.cv_info.pack(anchor="w", pady=(4, 0))
 
-        # ── Card 3: Stats + Delay
+        # Card 3: Stats & Delay
         c3 = self._card(cols, "3  Stats & Delay", col=2)
 
-        self.stat_sent = self._stat_widget(c3, "Sent", "0", SUCCESS)
+        self.stat_sent = self._stat_widget(c3, "Sent",      "0", SUCCESS)
         ctk.CTkFrame(c3, height=1, fg_color=BORDER).pack(fill="x", padx=14, pady=2)
-        self.stat_fail = self._stat_widget(c3, "Failed", "0", DANGER)
+        self.stat_fail = self._stat_widget(c3, "Failed",    "0", DANGER)
         ctk.CTkFrame(c3, height=1, fg_color=BORDER).pack(fill="x", padx=14, pady=2)
         self.stat_left = self._stat_widget(c3, "Remaining", "—", MUTED)
         ctk.CTkFrame(c3, height=1, fg_color=BORDER).pack(fill="x", padx=14, pady=6)
 
         delay_row = ctk.CTkFrame(c3, fg_color="transparent")
         delay_row.pack(fill="x", padx=14, pady=(0, 4))
-        ctk.CTkLabel(delay_row, text="Delay", font=ctk.CTkFont(size=12),
-                     text_color=MUTED).pack(side="left")
-        self.delay_lbl = ctk.CTkLabel(delay_row, text=f"{self.settings.get('delay', 12)}s",
-                                       font=ctk.CTkFont(size=12, weight="bold"),
-                                       text_color=ACCENT)
+        ctk.CTkLabel(delay_row, text="Delay",
+                     font=ctk.CTkFont(size=12), text_color=MUTED).pack(side="left")
+        self.delay_lbl = ctk.CTkLabel(delay_row,
+                                      text=f"{self.settings.get('delay', 12)}s",
+                                      font=ctk.CTkFont(size=12, weight="bold"),
+                                      text_color=ACCENT)
         self.delay_lbl.pack(side="right")
-
         self.delay_slider = ctk.CTkSlider(c3, from_=5, to=60, number_of_steps=55,
-                                           button_color=ACCENT, button_hover_color="#4a4dd4",
-                                           command=self._on_delay_change)
+                                          button_color=ACCENT, button_hover_color="#4a4dd4",
+                                          command=self._on_delay_change)
         self.delay_slider.set(self.settings.get("delay", 12))
         self.delay_slider.pack(fill="x", padx=14, pady=(0, 14))
 
-        # ── Progress bar
+        # Progress
         prog_card = ctk.CTkFrame(body, fg_color=CARD, corner_radius=16,
-                                  border_width=1, border_color=BORDER)
+                                 border_width=1, border_color=BORDER)
         prog_card.pack(fill="x", pady=(14, 0))
-
         prog_inner = ctk.CTkFrame(prog_card, fg_color="transparent")
         prog_inner.pack(fill="x", padx=16, pady=12)
-
         self.status_dot = ctk.CTkLabel(prog_inner, text="●  Ready to send",
-                                        text_color=MUTED, font=ctk.CTkFont(size=13))
+                                       text_color=MUTED, font=ctk.CTkFont(size=13))
         self.status_dot.pack(side="left")
-
         self.progress_pct = ctk.CTkLabel(prog_inner, text="0%",
-                                          text_color=MUTED, font=ctk.CTkFont(size=13))
+                                         text_color=MUTED, font=ctk.CTkFont(size=13))
         self.progress_pct.pack(side="right")
-
         self.progress = ctk.CTkProgressBar(prog_card, height=6, corner_radius=3,
-                                            progress_color=ACCENT, fg_color=CARD2)
+                                           progress_color=ACCENT, fg_color=CARD2)
         self.progress.set(0)
         self.progress.pack(fill="x", padx=16, pady=(0, 14))
 
-        # ── Send button
+        # Send button
         self.send_btn = ctk.CTkButton(
             body, text="🚀  Start Sending", height=52, corner_radius=16,
             fg_color=ACCENT, hover_color="#4a4dd4",
@@ -268,11 +258,10 @@ class App(ctk.CTk):
         )
         self.send_btn.pack(fill="x", pady=14)
 
-        # ── Log
+        # Log
         log_card = ctk.CTkFrame(body, fg_color=CARD, corner_radius=16,
-                                  border_width=1, border_color=BORDER)
+                                 border_width=1, border_color=BORDER)
         log_card.pack(fill="both", expand=True)
-
         log_header = ctk.CTkFrame(log_card, fg_color="transparent")
         log_header.pack(fill="x", padx=16, pady=(12, 0))
         ctk.CTkLabel(log_header, text="Activity Log",
@@ -282,12 +271,10 @@ class App(ctk.CTk):
                       corner_radius=6, fg_color=CARD2, hover_color=BORDER,
                       font=ctk.CTkFont(size=11), text_color=MUTED,
                       command=self._clear_log).pack(side="right")
-
         self.log = ctk.CTkTextbox(log_card, corner_radius=0, fg_color="transparent",
-                                   font=ctk.CTkFont(family="Courier", size=12),
-                                   state="disabled", wrap="none")
+                                  font=ctk.CTkFont(family="Courier", size=12),
+                                  state="disabled", wrap="none")
         self.log.pack(fill="both", expand=True, padx=8, pady=(6, 10))
-
         self.log.tag_config("ok",   foreground=SUCCESS)
         self.log.tag_config("err",  foreground=DANGER)
         self.log.tag_config("info", foreground=MUTED)
@@ -295,14 +282,13 @@ class App(ctk.CTk):
     # ── Helpers ───────────────────────────────────────────────────────────────
 
     def _card(self, parent, title, col):
-        outer = ctk.CTkFrame(parent, fg_color=CARD, corner_radius=16,
-                             border_width=1, border_color=BORDER)
-        outer.grid(row=0, column=col, sticky="nsew",
-                   padx=(0 if col == 0 else 10, 0), pady=0)
-        ctk.CTkLabel(outer, text=title, font=ctk.CTkFont(size=12, weight="bold"),
+        f = ctk.CTkFrame(parent, fg_color=CARD, corner_radius=16,
+                         border_width=1, border_color=BORDER)
+        f.grid(row=0, column=col, sticky="nsew", padx=(0 if col == 0 else 10, 0))
+        ctk.CTkLabel(f, text=title, font=ctk.CTkFont(size=12, weight="bold"),
                      text_color=MUTED).pack(anchor="w", padx=14, pady=(14, 8))
-        ctk.CTkFrame(outer, height=1, fg_color=BORDER).pack(fill="x", padx=14, pady=(0, 10))
-        return outer
+        ctk.CTkFrame(f, height=1, fg_color=BORDER).pack(fill="x", padx=14, pady=(0, 10))
+        return f
 
     def _field_label(self, parent, text):
         ctk.CTkLabel(parent, text=text, anchor="w",
@@ -314,11 +300,10 @@ class App(ctk.CTk):
         row.pack(fill="x", padx=14, pady=6)
         ctk.CTkLabel(row, text=label, anchor="w",
                      font=ctk.CTkFont(size=12), text_color=MUTED).pack(side="left")
-        val_lbl = ctk.CTkLabel(row, text=value, anchor="e",
-                               font=ctk.CTkFont(size=18, weight="bold"),
-                               text_color=color)
-        val_lbl.pack(side="right")
-        return val_lbl
+        lbl = ctk.CTkLabel(row, text=value, anchor="e",
+                           font=ctk.CTkFont(size=18, weight="bold"), text_color=color)
+        lbl.pack(side="right")
+        return lbl
 
     def _on_delay_change(self, val):
         v = int(val)
@@ -327,7 +312,6 @@ class App(ctk.CTk):
         save_settings_file(self.settings)
 
     def _test_login(self):
-        import smtplib
         email    = self.email_entry.get().strip()
         password = self.pass_entry.get().strip()
         if not email or not password:
@@ -350,14 +334,14 @@ class App(ctk.CTk):
 
     def _login_ok(self):
         self.login_btn.configure(state="normal", text="✔ Connected",
-                                  text_color=SUCCESS, fg_color="#0f2d1a",
-                                  border_color=SUCCESS)
+                                 text_color=SUCCESS, fg_color="#0f2d1a",
+                                 border_color=SUCCESS)
         self.login_status.configure(text="✔", text_color=SUCCESS)
 
     def _login_fail(self, err):
         self.login_btn.configure(state="normal", text="✖ Failed — Retry",
-                                  text_color=DANGER, fg_color="#2d0f0f",
-                                  border_color=DANGER)
+                                 text_color=DANGER, fg_color="#2d0f0f",
+                                 border_color=DANGER)
         self.login_status.configure(text="✖", text_color=DANGER)
         messagebox.showerror("Login Failed", f"Could not connect:\n{err}")
 
@@ -365,9 +349,8 @@ class App(ctk.CTk):
         path = filedialog.askopenfilename(filetypes=[("Text files", "*.txt")])
         if path:
             self.email_list_path = path
-            self.email_count = sum(1 for l in open(path) if l.strip())
-            name = os.path.basename(path)
-            self.list_btn.configure(text=f"✔  {name}", text_color=SUCCESS)
+            self.email_count = sum(1 for line in open(path) if line.strip())
+            self.list_btn.configure(text=f"✔  {os.path.basename(path)}", text_color=SUCCESS)
             self.list_info.configure(text=f"{self.email_count} recipients found", text_color=SUCCESS)
             self.stat_left.configure(text=str(self.email_count))
 
@@ -375,8 +358,7 @@ class App(ctk.CTk):
         path = filedialog.askopenfilename()
         if path:
             self.file_path = path
-            name = os.path.basename(path)
-            self.cv_btn.configure(text=f"✔  {name}", text_color=SUCCESS)
+            self.cv_btn.configure(text=f"✔  {os.path.basename(path)}", text_color=SUCCESS)
             self.cv_info.configure(text="Ready to attach", text_color=SUCCESS)
 
     def _log_write(self, text, tag="info"):
@@ -396,17 +378,14 @@ class App(ctk.CTk):
     def _start(self):
         if self.sending:
             return
-
         email    = self.email_entry.get().strip()
         password = self.pass_entry.get().strip()
-
         if not email or not password:
             messagebox.showwarning("Missing Info", "Please enter your email and password.")
             return
         if not self.email_list_path:
             messagebox.showwarning("Missing Info", "Please load an email list first.")
             return
-
         try:
             smtp_server, smtp_port = get_smtp_settings(email)
         except ValueError as e:
@@ -432,12 +411,10 @@ class App(ctk.CTk):
 
     def _send_all(self, emails, smtp_server, smtp_port, email, password, delay):
         total  = len(emails)
-        sent   = 0
-        failed = 0
+        sent   = failed = 0
 
         for i, recipient in enumerate(emails):
             ok = send_email(recipient, smtp_server, smtp_port, email, password, self.file_path)
-
             if ok:
                 sent += 1
                 self.after(0, self._log_write, f"✔  {recipient}", "ok")
@@ -445,24 +422,21 @@ class App(ctk.CTk):
                 failed += 1
                 self.after(0, self._log_write, f"✖  {recipient}", "err")
 
-            prog = (i + 1) / total
+            pct       = int((i + 1) / total * 100)
             remaining = total - (i + 1)
-            pct = int(prog * 100)
-
-            self.after(0, self.progress.set, prog)
-            self.after(0, self.progress_pct.configure, {"text": f"{pct}%"})
-            self.after(0, self.stat_sent.configure, {"text": str(sent)})
-            self.after(0, self.stat_fail.configure, {"text": str(failed)})
-            self.after(0, self.stat_left.configure, {"text": str(remaining)})
-
+            self.after(0, self.progress.set, (i + 1) / total)
+            self.after(0, lambda p=pct: self.progress_pct.configure(text=f"{p}%"))
+            self.after(0, lambda s=sent: self.stat_sent.configure(text=str(s)))
+            self.after(0, lambda f=failed: self.stat_fail.configure(text=str(f)))
+            self.after(0, lambda r=remaining: self.stat_left.configure(text=str(r)))
             time.sleep(delay)
 
-        summary = f"\n── Done  ·  ✔ Sent: {sent}  ·  ✖ Failed: {failed} ──"
-        self.after(0, self._log_write, summary, "info")
-        self.after(0, self._set_status, f"Done — {sent} sent, {failed} failed",
+        self.after(0, self._log_write,
+                   f"\n── Done  ·  ✔ Sent: {sent}  ·  ✖ Failed: {failed} ──", "info")
+        self.after(0, self._set_status,
+                   f"Done — {sent} sent, {failed} failed",
                    SUCCESS if failed == 0 else DANGER)
-        self.after(0, lambda: self.send_btn.configure(
-            state="normal", text="🚀  Start Sending"))
+        self.after(0, lambda: self.send_btn.configure(state="normal", text="🚀  Start Sending"))
         self.sending = False
 
 
